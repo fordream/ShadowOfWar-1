@@ -1,0 +1,10 @@
+Shadow of War Reference
+
+• Swordsman
+• Archer
+• Orc
+• Dwarf
+• Troll
+• Ninja
+• Knight
+• Wizard
