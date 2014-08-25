@@ -126,40 +126,37 @@ class Button:
 
         
 
-for i in range(1,31 ): # Territory 'adj' key value a list of adjacent territories
-    while 1:
-        if i <= 10:
-            color = 'red'
-            shift = 1
-        elif i <= 20:
-            color = 'white'
-            shift = 2
-        elif i <= 30:
-            color = 'blue'
-            shift = 3
-        x = random.randint(128+(750*(shift-1)),750*shift)
-        y = random.randint(64,800)
+board = []
 
-        found = False
-        
-        for i in board:
-            if distance(x,y,i['x'],i['y']) <= 128:
-                found = True
+poslistred = [[320,640],[480,480],[480,800],[640,640]]
+poslistwhite = [[320+640,640],[480+640,480],[480+640,800],[640+640,640]]
+poslistblue = [[320+1280,640],[480+1280,480],[480+1280,800],[640+1280,640]]
 
-        if not found:
-            board.append({'team':color,'troops':[],'x':x,'y':y,'adj':[],
-                          'buildings':[{'name':'fortress','img':load('images/fortress'+color+'.png'),'pos':[640,480]},
-                                       {'name':'catapule','img':load('images/catapult.png'),'pos':[240,480]}]})
-            break
+for pos in poslistred:
+    board.append({'team':'red','defenses':[{'name':'knight','img':load('images/knight.png'),'pos':[240,480]}],'x':pos[0],'y':pos[1],'adj':[],
+                          'buildings':[{'name':'fortress','img':load('images/fortressred.png'),'pos':[640,480]}]})
+for pos in poslistwhite:
+    board.append({'team':'white','defenses':[{'name':'knight','img':load('images/knight.png'),'pos':[240,480]}],'x':pos[0],'y':pos[1],'adj':[],
+                          'buildings':[{'name':'fortress','img':load('images/fortresswhite.png'),'pos':[640,480]}]})
+for pos in poslistblue:
+    board.append({'team':'blue','defenses':[{'name':'knight','img':load('images/knight.png'),'pos':[240,480]}],'x':pos[0],'y':pos[1],'adj':[],
+                          'buildings':[{'name':'fortress','img':load('images/fortressblue.png'),'pos':[640,480]}]})
 
+def getterr(pos):
+    for i in board:
+        if i['x'] == pos[0] and i['y'] == pos[1]:
+            return i
+    
 for i in board:
-    if board.index(i)-1 == -1:
-        continue
-    i['adj'].append(board[board.index(i)-1])
-    try:
-        i['adj'].append(board[board.index(i)+1])
-    except IndexError:
-        pass
+    for terr in vars()['poslist'+i['team']]:
+        i['adj'].append(getterr(terr))
+
+    for t in board:
+        if distance(i['x'],i['y'],t['x'],t['y']) <= 640:
+            if not t['team'] == i['team']:
+                i['adj'].append(t)
+
+    
 def text(x,y,**kwargs):
     if not 'text' in kwargs:
         kwargs['text'] = ''
@@ -553,8 +550,8 @@ def selltroop():
         flip()
 
 def getnear(pos):
-    high=selected['buildings'][0]
-    for b in selected['buildings']:
+    high=selected['defenses'][0]
+    for b in selected['defenses']:
         if distance(high['pos'][0],high['pos'][1],pos[0],pos[1]) > distance(b['pos'][0],b['pos'][1],pos[0],pos[1]):
             high = b
 
@@ -624,7 +621,10 @@ def attack(selected):
                 t[1]=[x, y]
         
             
-                
+
+        for t in selected['defenses']:
+            blitcenter(t['img'],t['pos'])
+                         
                 
 
         if turn == 'red':
