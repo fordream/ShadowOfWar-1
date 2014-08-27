@@ -150,7 +150,7 @@ for i in board:
         i['adj'].append(getterr(terr))
 
     for t in board:
-        if distance(i['x'],i['y'],t['x'],t['y']) <= 640:
+        if distance(i['x'],i['y'],t['x'],t['y']) <= 480:
             if not t['team'] == i['team']:
                 i['adj'].append(t)
 
@@ -348,6 +348,7 @@ def mainmap():
     bg = pygame.image.load('images/map.png')
     trainbutton = Button(load('images/train.png'),[200,900])
     sellbutton = Button(load('images/sell.png'),[433,900])
+    placebutton = Button(load('images/place.png'),[645,900])
     x = 0
     r = 24
     rmode = 2
@@ -380,8 +381,10 @@ def mainmap():
                     
                     if total > 0:
                         for i in selected['adj']:
-                            if i['team'] == turn and not selected['team'] == turn:
-                                attack()
+                            if not selected['team'] == turn:
+                                if i['team'] == turn:
+                                    print selected['adj']
+                                    attack()
 
                 if trainbutton.hover():
                     click.play()
@@ -390,6 +393,11 @@ def mainmap():
                 if sellbutton.hover():
                     click.play()
                     selltroop()
+
+                if placebutton.hover():
+                    click.play()
+                    if selected['team'] == turn:
+                        placetroops()
                 pos = pygame.mouse.get_pos()
                 for i in board:
                     if distance(i['x'],i['y'],pos[0]+x,pos[1]) <= 16:
@@ -406,13 +414,11 @@ def mainmap():
 
             if not selected == None:
                 pygame.draw.circle(screen,colors[selected['team']],[selected['x']-x,selected['y']],r,2)
-            '''for adj in land['adj']:
-                if adj['team'] == turn and not land['team'] == turn:
-            '''     
 
         attackbutton.render(screen)
         trainbutton.render(screen)
         sellbutton.render(screen)
+        placebutton.render(screen)
 
         if r == 30:
             rmode = -1
@@ -584,8 +590,86 @@ def getnear(pos):
 
     return b
         
+def placetroops():
+    global selected
+    global troopsred
+    global troopsblue
+    
+    donetxt = font.render("Done",0,[200,0,0])
+    done = Button(donetxt,[1000,800])
+    
+    tile = load('images/grass.png')
+    fort = load('images/fortress'+selected['team']+'.png')
+    troopnames = ['swordsman','archer','orc','dwarf','goblin','ninja',
+                  'knight','wizard']
+
+    troops = []
+    
+    troopselected = 0
+
+    pygame.key.set_repeat(1,100)
+
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    pygame.quit()
+                    save_cfg()
+                    raise SystemExit
+                elif event.key == pygame.K_SPACE:
+                    if troopselected == len(troopnames)-1:
+                        troopselected = 0
+                    else:
+                        troopselected += 1
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                pos = pygame.mouse.get_pos()
+                troopinfo[troopnames[troopselected]]['pos'] = pos
+                if turn == 'red':
+                    if troopsred[troopnames[troopselected]] > 0:
+                        selected['defenses'].append([troopinfo[troopnames[troopselected]]['img'],pos,troopnames[troopselected],troopinfo[troopnames[troopselected]]['hp']])
+                        troopsred[troopnames[troopselected]] -= 1
+                else:
+                    if troopsblue[troopnames[troopselected]] > 0:
+                        selected['defenses'].append([troopinfo[troopnames[troopselected]]['img'],pos,troopnames[troopselected],troopinfo[troopnames[troopselected]]['hp']])
+                        troopsblue[troopnames[troopselected]] -= 1
+
+                if done.hover():
+                    click.play()
+
+                    mainmap()
+
+                     
+        for x in range(0,1280,256):
+            for y in range(0,960,256):
+                blit(tile,[x,y])
+                
+        blitcenter(fort,[640,480])
+
+        for t in selected['defenses']:
+            blitcenter(t[0],t[1])
+
+            if t[3] < troopinfo[t[2]]['hp']:
+                pygame.draw.rect(screen,[255,0,0],[t[1][0]-32,t[1][1]-72,64,8])
+                pygame.draw.rect(screen,[0,255,0],[t[1][0]-32,t[1][1]-72,int(t[3]/float(troopinfo[t[2]]['hp'])*64),8])
+
+        done.render(screen)
+        
+        if turn == 'red':
+            text(50,50,text='Troop selected: '+troopnames[troopselected].title()+' ('+str(troopsred[troopnames[troopselected]])+'). Press Space to change',size=40)
+        else:
+            text(50,50,text='Troop selected: '+troopnames[troopselected].title()+' ('+str(troopsblue[troopnames[troopselected]])+'). Press Space to change',size=40)
+    
+        flip()
+
 
 def attack():
+    global goldred
+    global goldblue
+    global selected
+    global turn
+    global troopsred
+    global troopsblue
+    
     tile = load('images/grass.png')
     fort = load('images/fortress'+selected['team']+'.png')
     music.stop()
@@ -657,11 +741,50 @@ def attack():
                 if targettroop[3] <= 0:
                     selected['defenses'].remove(targettroop)
 
+                t[3] -= troopinfo[targettroop[2]]['damage']/16
+
+                if t[3] <= 0:
+                    troops.remove(t)
+                if troops == []:
+                    music.load('music/Title.mp3')
+                    if music_on:
+                        music.play(-1)
+                    msg('Defeat!')
+                    if turn == 'red':
+                        goldblue+=6400
+                    else:
+                        goldred+=6400
+                    selected=None
+
+                    if turn == 'red':
+                        turn = 'blue'
+                    else:
+                        turn = 'red'
+                    displayturn()
+                    mainmap()
+
+                if t[3] < troopinfo[t[2]]['hp']:
+                    pygame.draw.rect(screen,[255,0,0],[t[1][0]-32,t[1][1]-72,64,8])
+                    pygame.draw.rect(screen,[0,255,0],[t[1][0]-32,t[1][1]-72,int(t[3]/float(troopinfo[t[2]]['hp'])*64),8])
+
                 if len(selected['defenses']) == 0:
                     selected['team'] = turn
                     music.load('music/Title.mp3')
-                    music.play(-1)
-                    msg('You win!')
+
+                    if music_on:
+                        music.play(-1)
+                    msg('Victory!')
+                    if turn == 'red':
+                        goldred+=6400
+                    else:
+                        goldblue+=6400
+                    selected=None
+
+                    if turn == 'red':
+                        turn = 'blue'
+                    else:
+                        turn = 'red'
+                    displayturn()
                     mainmap()
                     
         
