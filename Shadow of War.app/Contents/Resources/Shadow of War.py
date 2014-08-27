@@ -66,6 +66,8 @@ troopsblue = {'swordsman':0,'archer':0,'orc':0,'dwarf':0,'goblin':0,'ninja':0,
 goldred = 6400
 goldblue = 6400
 
+canattack = True
+
 troopinfo = {'swordsman':{'img':load('images/swordsman.png'),'hp':75,'damage':25},
              'archer':{'img':load('images/archer.png'),'hp':75,'damage':30},
              'orc':{'img':load('images/orc.png'),'hp':90,'damage':30},
@@ -340,6 +342,8 @@ def stage1():
 
 def mainmap():
     global selected
+    global turn
+    global canattack
 
     if turn == 'red':
         attackbutton = Button(attack_r,[50,900])
@@ -349,6 +353,7 @@ def mainmap():
     trainbutton = Button(load('images/train.png'),[200,900])
     sellbutton = Button(load('images/sell.png'),[433,900])
     placebutton = Button(load('images/place.png'),[645,900])
+    endbutton = Button(load('images/end.png'),[908,900])
     x = 0
     r = 24
     rmode = 2
@@ -367,7 +372,7 @@ def mainmap():
                     if x < 1067:
                         x+=32
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                if attackbutton.hover() and not selected == None: # If attack button clicked...
+                if attackbutton.hover() and not selected == None and canattack: # If attack button clicked...
                     click.play()
 
                     total = 0
@@ -398,6 +403,19 @@ def mainmap():
                     if not selected == None:
                         if selected['team'] == turn:
                             placetroops()
+                if endbutton.hover():
+                    click.play()
+
+                    if not canattack:
+                        if turn == 'red':
+                            turn = 'blue'
+                        else:
+                            turn = 'red'
+
+                        displayturn()
+                        canattack = True
+                        mainmap()
+
                 pos = pygame.mouse.get_pos()
                 for i in board:
                     if distance(i['x'],i['y'],pos[0]+x,pos[1]) <= 16:
@@ -419,6 +437,9 @@ def mainmap():
         trainbutton.render(screen)
         sellbutton.render(screen)
         placebutton.render(screen)
+
+        if not canattack:
+            endbutton.render(screen)
 
         if r == 30:
             rmode = -1
@@ -669,6 +690,7 @@ def attack():
     global turn
     global troopsred
     global troopsblue
+    global canattack
     
     tile = load('images/grass.png')
     fort = load('images/fortress'+selected['team']+'.png')
@@ -740,10 +762,15 @@ def attack():
 
                 if targettroop[3] <= 0:
                     selected['defenses'].remove(targettroop)
+                    if turn == 'red':
+                        troopsred[t[2]] += 1
+                    else:
+                        troopsblue[t[2]] += 1
+                    troops.remove(t)
 
                 t[3] -= troopinfo[targettroop[2]]['damage']/16
 
-                if t[3] <= 0:
+                if t[3] <= 0 and t in troops:
                     troops.remove(t)
 
                 total = 0
@@ -767,11 +794,7 @@ def attack():
                         goldred+=6400
                     selected=None
 
-                    if turn == 'red':
-                        turn = 'blue'
-                    else:
-                        turn = 'red'
-                    displayturn()
+                    canattack = False
                     mainmap()
 
                 if t[3] < troopinfo[t[2]]['hp']:
@@ -793,11 +816,6 @@ def attack():
 
                     selected=None
 
-                    if turn == 'red':
-                        turn = 'blue'
-                    else:
-                        turn = 'red'
-
                     found = False
                     
                     for i in board:
@@ -808,7 +826,10 @@ def attack():
                         msg(turn+'team wins the game!')
                         pygame.quit()
                         raise SystemExit
-                    displayturn()
+
+
+                    canattack = False
+                    
                     mainmap()
                     
         
