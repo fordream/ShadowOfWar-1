@@ -395,8 +395,9 @@ def mainmap():
 
                 if placebutton.hover():
                     click.play()
-                    if selected['team'] == turn:
-                        placetroops()
+                    if not selected == None:
+                        if selected['team'] == turn:
+                            placetroops()
                 pos = pygame.mouse.get_pos()
                 for i in board:
                     if distance(i['x'],i['y'],pos[0]+x,pos[1]) <= 16:
@@ -623,6 +624,10 @@ def placetroops():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
                 troopinfo[troopnames[troopselected]]['pos'] = pos
+                if done.hover():
+                    click.play()
+
+                    mainmap()
                 if turn == 'red':
                     if troopsred[troopnames[troopselected]] > 0:
                         selected['defenses'].append([troopinfo[troopnames[troopselected]]['img'],pos,troopnames[troopselected],troopinfo[troopnames[troopselected]]['hp']])
@@ -632,10 +637,6 @@ def placetroops():
                         selected['defenses'].append([troopinfo[troopnames[troopselected]]['img'],pos,troopnames[troopselected],troopinfo[troopnames[troopselected]]['hp']])
                         troopsblue[troopnames[troopselected]] -= 1
 
-                if done.hover():
-                    click.play()
-
-                    mainmap()
 
                      
         for x in range(0,1280,256):
@@ -744,7 +745,17 @@ def attack():
 
                 if t[3] <= 0:
                     troops.remove(t)
-                if troops == []:
+
+                total = 0
+
+                if turn == 'red':
+                    for i in troopsred:
+                        total += troopsred[i]
+                else:
+                    for i in troopsblue:
+                        total += troopsblue[i]
+                     
+                if troops == [] and total == 0:
                     music.load('music/Title.mp3')
                     if music_on:
                         music.play(-1)
