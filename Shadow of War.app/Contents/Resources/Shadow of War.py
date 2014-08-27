@@ -383,7 +383,6 @@ def mainmap():
                         for i in selected['adj']:
                             if not selected['team'] == turn:
                                 if i['team'] == turn:
-                                    print selected['adj']
                                     attack()
 
                 if trainbutton.hover():
@@ -646,7 +645,7 @@ def placetroops():
         blitcenter(fort,[640,480])
 
         for t in selected['defenses']:
-            blitcenter(t[0],t[1])
+            blitcenter(pygame.transform.flip(t[0],True,False),t[1])
 
             if t[3] < troopinfo[t[2]]['hp']:
                 pygame.draw.rect(screen,[255,0,0],[t[1][0]-32,t[1][1]-72,64,8])
@@ -784,6 +783,17 @@ def attack():
                         turn = 'blue'
                     else:
                         turn = 'red'
+
+                    found = False
+                    
+                    for i in board:
+                        if not i['team'] == turn:
+                            found = True
+
+                    if not found:
+                        msg(turn+'team wins the game!')
+                        pygame.quit()
+                        raise SystemExit
                     displayturn()
                     mainmap()
                     
