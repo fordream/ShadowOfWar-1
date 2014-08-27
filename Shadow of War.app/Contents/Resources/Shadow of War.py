@@ -760,9 +760,10 @@ def attack():
                     if music_on:
                         music.play(-1)
                     msg('Defeat!')
-                    if turn == 'red':
+
+                    if turn == 'red' and selected['team'] == 'blue':
                         goldblue+=6400
-                    else:
+                    elif selected['team'] == 'red':
                         goldred+=6400
                     selected=None
 
@@ -780,7 +781,7 @@ def attack():
                 if len(selected['defenses']) == 0:
                     selected['team'] = turn
                     music.load('music/Title.mp3')
-
+                    selected['defenses'].append([troopinfo['knight']['img'],[240,640],'knight',troopinfo['knight']['hp']])
                     if music_on:
                         music.play(-1)
                     msg('Victory!')
@@ -788,6 +789,8 @@ def attack():
                         goldred+=6400
                     else:
                         goldblue+=6400
+
+
                     selected=None
 
                     if turn == 'red':
