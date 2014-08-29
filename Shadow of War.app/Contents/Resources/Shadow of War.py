@@ -613,13 +613,13 @@ def selltroop():
         flip()
 
 def getnear(pos):
-    high=selected['defenses'][0]
-    for b in selected['defenses']:
-        if distance(high[1][0],high[1][1],pos[0],pos[1]) > distance(b[1][0],b[1][1],pos[0],pos[1]):
-            high = b
+    low = selected['defenses'][0]
 
-    return b
-        
+    for i in selected['defenses']:
+        if distance(i[1][0],i[1][1],pos[0],pos[1]) < distance(low[1][0],low[1][1],pos[0],pos[1]):
+            low = i
+
+    return low
 def placetroops():
     global selected
     global troopsred
@@ -763,11 +763,16 @@ def attack():
 
             deg = getangle(t[1][0],t[1][1],targetpos[0],targetpos[1])
             
-            if distance(pos[0], pos[1], targetpos[0], targetpos[1])>speed:
+            if distance(pos[0], pos[1], targetpos[0], targetpos[1])>=speed:
                 dx = math.cos(math.radians(deg))
                 dy = math.sin(math.radians(deg))
+                    
                 
                 t[1] = [int(dx*speed)+t[1][0],int(dy*speed)+t[1][1]]
+
+                if t[1][0] >= 1280:
+                    t[1][0] = 0
+
             else:
                 targettroop[3]-=troopinfo[t[2]]['damage']/16
 
