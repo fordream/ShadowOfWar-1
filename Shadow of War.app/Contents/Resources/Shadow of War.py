@@ -29,7 +29,15 @@ def loading():
         loading = font.render("Loading...",0,[200,0,0])
         blitcenter(loading,[640,480])
         pygame.display.flip()
+def getangle(x1,y1,x2,y2):
+    a = x2-x1
+    b = y2-y1
 
+    h = math.sqrt(a**2+b**2)
+
+    theta = math.asin(b/float(h))
+
+    return math.degrees(theta)
 
 loading_thread = threading.Thread(target=loading,name='_shadowofwarloadscreen')
 loading_thread.start()
@@ -414,6 +422,7 @@ def mainmap():
 
                         displayturn()
                         canattack = True
+                        selected = None
                         mainmap()
 
                 pos = pygame.mouse.get_pos()
@@ -751,26 +760,23 @@ def attack():
             elif t[2]=='knight':speed=8
             else:speed=16
             targetpos = [targettroop[1][0]-32,targettroop[1][1]]
+
+            deg = getangle(t[1][0],t[1][1],targetpos[0],targetpos[1])
+            
             if distance(pos[0], pos[1], targetpos[0], targetpos[1])>speed:
-                diff=[targetpos[0]-pos[0], targetpos[1]-pos[1]]
-                direction=math.atan(diff[1]/diff[0])
-                x=math.cos(direction)*speed+pos[0]
-                y=math.sin(direction)*speed+pos[1]
-                t[1]=[x, y]
+                dx = math.cos(math.radians(deg))
+                dy = math.sin(math.radians(deg))
+                
+                t[1] = [int(dx*speed)+t[1][0],int(dy*speed)+t[1][1]]
             else:
                 targettroop[3]-=troopinfo[t[2]]['damage']/16
 
                 if targettroop[3] <= 0:
                     selected['defenses'].remove(targettroop)
-                    if turn == 'red':
-                        troopsred[t[2]] += 1
-                    else:
-                        troopsblue[t[2]] += 1
-                    troops.remove(t)
 
                 t[3] -= troopinfo[targettroop[2]]['damage']/16
 
-                if t[3] <= 0 and t in troops:
+                if t[3] <= 0:
                     troops.remove(t)
 
                 total = 0
